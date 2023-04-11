@@ -73,10 +73,15 @@
         tools:layout_editor_absoluteX="8dp" />
 
 <!--android:layoutAnimation="@anim/layout_animation"-->
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:id="@+id/mainLayout">
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/calendar_recycler_view_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
         android:layout_marginStart="8dp" />
+    </LinearLayout>
 </LinearLayout>

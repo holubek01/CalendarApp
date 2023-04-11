@@ -62,15 +62,6 @@ class CustomAdapter(
 
 
 
-
-
-
-
-
-
-
-
-
     //tworzy widoki, musimy przekazać mu z czego ma tworzyć
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -93,38 +84,18 @@ class CustomAdapter(
         holder.txtDayInWeek.setTypeface(null, Typeface.NORMAL)
 
         holder.txtDay.setTextSize(12F)
-        holder.txtDay.setTextSize(12F)
 
 
 
 
         holder.progressBar.progress = 0
 
-        //var tmp = dateStringFromFormat(calendar.time, "yyyyMMdd")!!.toInt()
-
-        println("jolo")
-        println(LocalDate.parse(LocalDateTime.ofInstant(calendar.toInstant(), calendar.getTimeZone().toZoneId()).toLocalDate()
-            .toString()))
-        println(eventMap[0].date)
         var tmpList = eventMap.filter { p -> p.date == LocalDate.parse(LocalDateTime.ofInstant(calendar.toInstant(), calendar.getTimeZone().toZoneId()).toLocalDate()
             .toString(),DateTimeFormatter.ofPattern("yyyy-MM-dd"));}.toList()
-
-        println("zuzia")
-        println(tmpList.size)
-        //println(tmpList[0].date)
 
         holder.progressBar.progress =
                 round(countDayProgress(tmpList)).toInt() //eventMap[tmp]!!.progress
 
-
-        /*
-        if (eventmap.containsKey(tmp))
-        {
-            holder.progressBar.progress =
-                round(countDayProgress(eventMap[tmp])).toInt() //eventMap[tmp]!!.progress
-        }
-
-         */
         holder.txtDayInWeek.text = dateFormat.format(calendar.time).toString().split(" ")[0]
         holder.txtDay.text = calendar[Calendar.DAY_OF_MONTH].toString()
 
@@ -143,32 +114,11 @@ class CustomAdapter(
             holder.txtDay.setTextSize(14F)
         }
 
-
-        /*
-        if (selectedDay!=0)
-        {
-
-            if (calendar[Calendar.DAY_OF_MONTH] == selectedDay)
-            {
-                holder.txtDay.setTextColor(Color.RED)
-                holder.txtDayInWeek.setTextColor(Color.RED)
-
-                holder.txtDay.setTypeface(null, Typeface.BOLD)
-                holder.txtDayInWeek.setTypeface(null, Typeface.BOLD)
-
-                holder.txtDay.setTextSize(14F)
-                holder.txtDay.setTextSize(14F)
-            }
-        }
-
-         */
-
         var index = 0
         holder.linearLayout!!.setOnClickListener {
             index = holder.adapterPosition
             selectCurrentDate = false
             holder.listener.onItemClick(index)
-            notifyDataSetChanged()
 
         }
 

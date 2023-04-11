@@ -19,12 +19,6 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-//TODO: Po kliknięciu na taska wyświetlają się szczegóły
-//(okno podobne do dodawania taska : nazwa, miejse, data, godzina,info)
-//plus możliwość usunięcia
-
-//aktywność powinna zwrócić wydarzenie (nazwe itp)
-
 class AddTaskActivity : AppCompatActivity() {
     private var placeList = mutableListOf<Place>()
     private lateinit var event: SimpleEvent
@@ -59,6 +53,7 @@ class AddTaskActivity : AppCompatActivity() {
         val date = findViewById<Button>(R.id.data)
         dateTxt = findViewById<TextView>(R.id.dataTxt)
 
+
         placeList.add(Place("Obowiązki domowe", R.drawable.house))
         placeList.add(Place("Praca", R.drawable.job))
         placeList.add(Place("Znajomi", R.drawable.friends))
@@ -73,6 +68,11 @@ class AddTaskActivity : AppCompatActivity() {
         startTimeButton.setOnClickListener{chooseStartTime()}
         endTimeButton.setOnClickListener{chooseEndTime()}
         date.setOnClickListener{datePicker()}
+
+        findViewById<TextView>(R.id.cancelbtn).setOnClickListener{
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
 
 
 

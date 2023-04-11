@@ -1,15 +1,16 @@
 package com.example.calendarapp
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.databinding.Bindable
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -18,15 +19,18 @@ import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.collections.ArrayList
-
 
 //TODO po kliknięciu na taska pojawiają się szczegóły
 //TODO usuwanie taska
 //TODO: Landscape
 //TODO: On restore data
 
-class MainActivity : AppCompatActivity() {
+//TODO: pomysły: przerobić aby ładniej wyglądał task (np godzina w srodku)
+//TODO: Dodanie obrazka do Todo
+
+//TODO: na long click można edytować
+
+class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
 
 
     private val months = mapOf(1 to "Styczeń", 2 to "Luty",
@@ -42,9 +46,6 @@ class MainActivity : AppCompatActivity() {
         12 to "Grudzień")
 
     private val calendar = Calendar.getInstance(Locale("pl", "PL"))
-    private val calendarCurrent = Calendar.getInstance(Locale("pl", "PL"))
-
-    //miesiąc rok
     private val dateFormat = SimpleDateFormat("M yyyy", Locale("pl", "PL"))
 
     private lateinit var calendarView: RecyclerView
@@ -57,8 +58,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var txt_current_month : TextView
 
 
-
-    //lista SimpleEvents
     private var eventList : ArrayList<SimpleEvent> = arrayListOf()
 
     private val currentDate = Calendar.getInstance(Locale.ENGLISH)
@@ -70,10 +69,34 @@ class MainActivity : AppCompatActivity() {
     private var selectedMonth = currentMonth
     private var selectedYear = currentYear
     private var prevSelected = selectedDay
+    private var shouldAnimate = true
 
     private var dates = java.util.ArrayList<Date>()
-    private var hours = java.util.ArrayList<String>()
-    //private val eventMap: MutableMap<Int, MutableList<SimpleEvent>> = mutableMapOf()
+
+
+    override fun onClick(position: Int) {
+
+
+
+        val myIntent= Intent(this,ShowTaskActivity::class.java)
+
+        val item=eventList[position]
+
+        //myIntent.putExtra("title",item.title)
+        //myIntent.putExtra("info",item.info)
+        //myIntent.putExtra("date",item.date)
+        //myIntent.putExtra("start",item.start)
+        //myIntent.putExtra("end",item.end)
+        //myIntent.putExtra("place",item.place)
+
+        myIntent.putExtra("event", item)
+
+
+        startActivity(Intent.createChooser(myIntent, null))
+
+
+
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -82,27 +105,74 @@ class MainActivity : AppCompatActivity() {
         super.setTitle("Organize yourself")
 
 
-
-
-
         calendarView = findViewById(R.id.calendar_recycler_view)
         calendarView2 = findViewById(R.id.calendar_recycler_view_2)
         prevBtn = findViewById(R.id.prev_month_button)
         nextBtn = findViewById(R.id.next_month_button)
         txt_current_month = findViewById(R.id.txt_current_month)
 
+        val mainLayout = findViewById<LinearLayout>(R.id.mainLayout)
+
+        mainLayout.setBackgroundResource(R.drawable.bbbb)
+
+        //calendarView2.setBackgroundResource(R.drawable.bbbb)
+
 
         eventList.add(
             SimpleEvent(
-            date = LocalDate.of(2023,3,5),
+            date = LocalDate.of(2023,4,10),
             title = "Event 420",
             place = TaskType.HOME,
             color = TaskType.HOBBY.color,
             start = "00:00",
-            end = "02:00",
+            end = "01:00",
             info = "jakies dodatkowe info"
         )
         )
+
+
+        eventList.add(
+            SimpleEvent(
+                date = LocalDate.of(2023,4,10),
+                title = "Event 460",
+                place = TaskType.HOME,
+                color = TaskType.HOBBY.color,
+                start = "03:00",
+                end = "04:00",
+                info = "jakies dodatkowe info"
+            )
+        )
+
+        eventList.add(
+            SimpleEvent(
+                date = LocalDate.of(2023,4,10),
+                title = "Event 460",
+                place = TaskType.HOME,
+                color = TaskType.HOBBY.color,
+                start = "05:00",
+                end = "10:00",
+                info = "jakies dodatkowe info"
+            )
+        )
+
+        eventList.add(
+            SimpleEvent(
+                date = LocalDate.of(2023,4,10),
+                title = "Event 460",
+                place = TaskType.HOME,
+                color = TaskType.HOBBY.color,
+                start = "11:00",
+                end = "23:00",
+                info = "jakies dodatkowe info"
+            )
+        )
+
+
+
+
+
+
+
 
 
         //nie można się cofnąć się do wcześniejszego miesiąca niż obecna data
@@ -130,10 +200,11 @@ class MainActivity : AppCompatActivity() {
         val snapHelper = LinearSnapHelper()
         snapHelper.attachToRecyclerView(calendarView)
 
-        //calendarLastDayInCalendar.add(Calendar.MONTH, 6)
 
         setUpCalendar()
     }
+
+
 
 
     //changeMonth tylko wtedy gdy zmieniamy miesiąc na poprzedni lub następny
@@ -155,7 +226,7 @@ class MainActivity : AppCompatActivity() {
         val lastDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
 
         //gdy zmieniamy miesiąc to ustalamy selectedDay na pierwszy dzień w miesiącu
-        /*if (changeMonth!=null)
+        if (changeMonth!=null)
         {
             selectedDay = changeMonth.getActualMinimum(Calendar.DAY_OF_MONTH)
             selectedMonth = changeMonth[Calendar.MONTH]
@@ -168,7 +239,7 @@ class MainActivity : AppCompatActivity() {
             selectedYear = currentYear
         }
 
-         */
+
         selectedDay =
             when {
                 changeMonth != null -> changeMonth.getActualMinimum(Calendar.DAY_OF_MONTH)
@@ -200,7 +271,6 @@ class MainActivity : AppCompatActivity() {
 
 
         while (dates.size < lastDay) {
-            // get position of selected day
             if (monthCalendar[Calendar.DAY_OF_MONTH] == selectedDay)
                 currentPosition = dates.size
             dates.add(monthCalendar.time)
@@ -223,38 +293,37 @@ class MainActivity : AppCompatActivity() {
         calendarView2.layoutManager =  LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false, )
 
 
-        for (i in 0 until 24)
-        {
-            if (i<10)
-            {
-                hours.add("0$i:00")
-                hours.add("0$i:15")
-                hours.add("0$i:30")
-                hours.add("0$i:45")
-            }
-            else {
-                hours.add("$i:00")
-                hours.add("$i:15")
-                hours.add("$i:30")
-                hours.add("$i:45")
-            }
-
-        }
-
-
-        calendarView2.adapter = CustomAdapter2(
+        val ada = CustomAdapter2(
             this,
-            hours,
+            //hours,
             currentDate,
             false,
             eventList,
             "",
-            0
+            0,
+            this, shouldAnimate
         )
 
+        calendarView2.adapter = ada
 
+        val swipeGesture = object : SwipeGesture(this)
+        {
 
-        //zmienia selcted day
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                if (ItemTouchHelper.LEFT == direction)
+                {
+                    ada.deleteItem(viewHolder.adapterPosition)
+                    shouldAnimate = false
+                    calendarView2.adapter = CustomAdapter2(this@MainActivity,currentDate,false, eventList, datetosee, prevSelected, this@MainActivity,shouldAnimate)
+
+                }
+
+            }
+        }
+
+        val touchHelper = ItemTouchHelper(swipeGesture)
+        touchHelper.attachToRecyclerView(calendarView2)
+
 
 
         adapter.setOnItemClickListener(object : CustomAdapter.OnItemClickListener {
@@ -284,8 +353,9 @@ class MainActivity : AppCompatActivity() {
 
                 datetosee = "${selectedYear}${month2}${day2}"
 
+                shouldAnimate=true
 
-                calendarView2.adapter = CustomAdapter2(this@MainActivity,hours,currentDate,false, eventList, datetosee, prevSelected)
+                calendarView2.adapter = CustomAdapter2(this@MainActivity,currentDate,false, eventList, datetosee, prevSelected, this@MainActivity,shouldAnimate)
 
                 txt_current_month.text = "$selectedDay $month $selectedYear"
 
@@ -344,8 +414,13 @@ class MainActivity : AppCompatActivity() {
     {
             result -> val data = result.data
         eventList.add(data!!.getParcelableExtra("event")!!)
-        calendarView2.adapter = CustomAdapter2(this@MainActivity,hours,currentDate,false, eventList, "", prevSelected)
+        calendarView2.adapter = CustomAdapter2(this@MainActivity,currentDate,false, eventList, "", prevSelected, this@MainActivity,shouldAnimate)
 
 
     }
+
+
+
+
+
 }
