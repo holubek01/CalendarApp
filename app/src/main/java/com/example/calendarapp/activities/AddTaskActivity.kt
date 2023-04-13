@@ -1,16 +1,22 @@
-package com.example.calendarapp
+package com.example.calendarapp.activities
 
 import android.app.Activity
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
+import android.text.Editable
 import android.view.View
+import android.view.Window
+import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.res.ResourcesCompat
-import com.example.calendarapp.db.SimpleEvent
-//import kotlinx.android.synthetic.main.activity_add_task.*
+import com.example.calendarapp.adapters.PlaceAdapter
+import com.example.calendarapp.R
+import com.example.calendarapp.TaskType
+import com.example.calendarapp.db.Event
 import www.sanju.motiontoast.MotionToast
 import www.sanju.motiontoast.MotionToastStyle
 import java.text.SimpleDateFormat
@@ -21,45 +27,49 @@ import java.util.*
 
 class AddTaskActivity : AppCompatActivity() {
     private var placeList = mutableListOf<Place>()
-    private lateinit var event: SimpleEvent
-    private lateinit var eventLList: kotlin.collections.ArrayList<SimpleEvent>
+    private lateinit var eventToAdd: Event
+    private lateinit var eventList: kotlin.collections.ArrayList<Event>
     private lateinit var startTimeTxt: TextView
     private lateinit var endTimeTxt: TextView
     private lateinit var dateTxt: TextView
     private lateinit var taskName: TextView
     private lateinit var spinner: Spinner
     private lateinit var infoTxt: EditText
+    private var position : Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if(resources.configuration.orientation== Configuration.ORIENTATION_LANDSCAPE) {
+            supportRequestWindowFeature(Window.FEATURE_NO_TITLE) // ukrycie tytułu aplikacji
+            window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN) // ustawienie trybu pełnoekranowego
+        }
         setContentView(R.layout.activity_add_task)
         super.setTitle("Organize yourself")
 
-
-
-        event = intent.getParcelableExtra("event")!!
-        eventLList = intent.getParcelableArrayListExtra("eventList")!!
+        eventToAdd = intent.getParcelableExtra("event", Event::class.java)!!
+        eventList = intent.getParcelableArrayListExtra("eventList", Event::class.java)!!
+        position = intent.getIntExtra("position",0)
 
 
         val startTimeButton = findViewById<Button>(R.id.startTime)
         val endTimeButton = findViewById<Button>(R.id.endTime)
-        startTimeTxt = findViewById<TextView>(R.id.startTimeTxt)
-        endTimeTxt = findViewById<TextView>(R.id.endTimeTxt)
-        infoTxt = findViewById<EditText>(R.id.info)
+        startTimeTxt = findViewById(R.id.startTimeTxt)
+        endTimeTxt = findViewById(R.id.endTimeTxt)
+        infoTxt = findViewById(R.id.info)
 
-        val taskName = findViewById<TextView>(R.id.taskName)
-        val taskType = findViewById<Spinner>(R.id.spinner)
+        taskName = findViewById(R.id.taskName)
+
 
         val date = findViewById<Button>(R.id.data)
-        dateTxt = findViewById<TextView>(R.id.dataTxt)
+        dateTxt = findViewById(R.id.dataTxt)
 
 
-        placeList.add(Place("Obowiązki domowe", R.drawable.house))
+        placeList.add(Place("Obowiązki domowe", R.drawable.home))
         placeList.add(Place("Praca", R.drawable.job))
         placeList.add(Place("Znajomi", R.drawable.friends))
         placeList.add(Place("Hobby", R.drawable.hobby))
 
-        spinner = findViewById<Spinner>(R.id.spinner)
+        spinner = findViewById(R.id.spinner)
 
         val adatper = PlaceAdapter(this@AddTaskActivity, placeList)
         spinner.adapter = adatper
@@ -70,12 +80,33 @@ class AddTaskActivity : AppCompatActivity() {
         date.setOnClickListener{datePicker()}
 
         findViewById<TextView>(R.id.cancelbtn).setOnClickListener{
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
+            var myIntent = Intent()
+            myIntent.putExtra("event", eventToAdd)
+            myIntent.putExtra("position", position)
+
+            setResult(Activity.RESULT_OK, myIntent)
+            finish()
         }
 
 
 
+        if (eventToAdd.title!="No title")
+        {
+            taskName.text = eventToAdd.title
+            var id = 0
+            if (eventToAdd.place == TaskType.HOME) id=0
+            else if (eventToAdd.place == TaskType.JOB) id=1
+            else if (eventToAdd.place == TaskType.FRIENDS) id=2
+            else if (eventToAdd.place == TaskType.HOBBY) id=3
+
+            spinner.setSelection(id)
+            //spinner.setSelection(spinner.adapter.getItemId(eventToAdd.place))
+
+            dateTxt.text =eventToAdd.date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            startTimeTxt.text = eventToAdd.start
+            endTimeTxt.text = eventToAdd.end
+            infoTxt.text = Editable.Factory.getInstance().newEditable(eventToAdd.info)
+        }
     }
 
     private fun chooseStartTime() {
@@ -196,12 +227,9 @@ class AddTaskActivity : AppCompatActivity() {
 
         //sprzawdzić czy nie ma już tasków w tym dniu o tej dacie
 
-        var lista = eventLList
+        var lista = eventList
             .filter { p -> p.date == LocalDate.parse(dateTxt.text,DateTimeFormatter.ofPattern("yyyy-MM-dd"));}
 
-
-        println(eventLList[0].date)
-        //println(lista[0].title)
 
         //nie mogą nachodzić na siebie taski
         for (item in lista)
@@ -216,42 +244,77 @@ class AddTaskActivity : AppCompatActivity() {
                 (startTime.isBefore(start) && endTime.isAfter(start)) || //nowy task zaczyna sie przed starym ale zachcza o niego
                 (startTime.isBefore(start) && endTime.isAfter(end)))
             {
-                MotionToast.createColorToast(this,getString(www.sanju.motiontoast.R.string.text_warning), getString(R.string.bad_hours),
-                    MotionToastStyle.WARNING,
-                    MotionToast.GRAVITY_BOTTOM,
-                    MotionToast.LONG_DURATION,
-                    ResourcesCompat.getFont(this, www.sanju.motiontoast.R.font.helvetica_regular))
-                return
+                if (item.start != eventToAdd.start && item.end != eventToAdd.end) {
+                    MotionToast.createColorToast(
+                        this,
+                        getString(www.sanju.motiontoast.R.string.text_warning),
+                        getString(R.string.bad_hours),
+                        MotionToastStyle.WARNING,
+                        MotionToast.GRAVITY_BOTTOM,
+                        MotionToast.LONG_DURATION,
+                        ResourcesCompat.getFont(
+                            this,
+                            www.sanju.motiontoast.R.font.helvetica_regular
+                        )
+                    )
+                    return
+                }
             }
         }
 
-        MotionToast.createColorToast(this,getString(www.sanju.motiontoast.R.string.text_success),getString(R.string.success),
-            MotionToastStyle.SUCCESS,
-            MotionToast.GRAVITY_BOTTOM,
-            MotionToast.LONG_DURATION,
-            ResourcesCompat.getFont(this, www.sanju.motiontoast.R.font.helvetica_regular))
+
+        if (eventToAdd.title=="No title") {
+            MotionToast.createColorToast(
+                this,
+                getString(www.sanju.motiontoast.R.string.text_success),
+                getString(R.string.success),
+                MotionToastStyle.SUCCESS,
+                MotionToast.GRAVITY_BOTTOM,
+                MotionToast.LONG_DURATION,
+                ResourcesCompat.getFont(this, www.sanju.motiontoast.R.font.helvetica_regular)
+            )
+        }
+
+        else
+        {
+            MotionToast.createColorToast(
+                this,
+                getString(www.sanju.motiontoast.R.string.text_success),
+                getString(R.string.successUpdate),
+                MotionToastStyle.SUCCESS,
+                MotionToast.GRAVITY_BOTTOM,
+                MotionToast.LONG_DURATION,
+                ResourcesCompat.getFont(this, www.sanju.motiontoast.R.font.helvetica_regular)
+            )
+        }
 
 
-        var type : TaskType
-        if (spinner.selectedItem.toString() == "Obowiązki domowe")  type = TaskType.HOME
-        else if (spinner.selectedItem.toString() == "Praca")  type = TaskType.JOB
-        else if (spinner.selectedItem.toString() == "Znajomi")  type = TaskType.FRIENDS
-        else type = TaskType.HOBBY
+
+        var type : TaskType = if (spinner.selectedItem == 0) TaskType.HOME
+        else if (spinner.selectedItem == 1) TaskType.JOB
+        else if (spinner.selectedItem == 2) TaskType.FRIENDS
+        else TaskType.HOBBY
 
 
-        event.date= LocalDate.parse(dateTxt.text, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        event.title = taskName.text.toString()
-        event.place = type
-        event.color = type.color
-        event.start = startTime.toString()
-        event.end = endTime.toString()
-        event.info = infoTxt.text.toString()
+        eventToAdd.date= LocalDate.parse(dateTxt.text, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        eventToAdd.title = taskName.text.toString()
 
-        myIntent.putExtra("event", event)
+        eventToAdd.place = type
+        eventToAdd.color = type.color
+        eventToAdd.place.img = type.img
+
+        eventToAdd.start = startTime.toString()
+        eventToAdd.end = endTime.toString()
+        eventToAdd.info = infoTxt.text.toString()
+
+
+
+        myIntent.putExtra("event", eventToAdd)
+        myIntent.putExtra("position", position)
+
 
         setResult(Activity.RESULT_OK, myIntent)
         finish()
-
     }
 }
 

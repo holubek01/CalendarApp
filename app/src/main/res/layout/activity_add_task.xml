@@ -5,7 +5,7 @@
     android:id="@+id/addtasklayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AddTaskActivity">
+    tools:context=".activities.AddTaskActivity">
 
 
     <TextView
@@ -36,7 +36,7 @@
         android:onClick="saveTask"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:text="save"
+        android:text="Zapisz"
         android:textColor="@color/white"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -52,7 +52,7 @@
         android:onClick="backToCalendar"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:text="cancel"
+        android:text="Anuluj"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toRightOf="@id/savebtn"

@@ -1,8 +1,9 @@
-package com.example.calendarapp
+package com.example.calendarapp.adapters
 
 import android.R
 import android.content.Context
 import android.graphics.Canvas
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
@@ -13,9 +14,8 @@ abstract class SwipeGesture(context: Context): ItemTouchHelper.SimpleCallback(0,
         return false
     }
 
-    val deleteColor  = context.getResources().getColor(R.color.holo_red_dark);
-
-    val deleteIcon = R.drawable.ic_delete
+    private val deleteColor  = ContextCompat.getColor(context, R.color.holo_red_dark)
+    private val deleteIcon = com.example.calendarapp.R.drawable.ic_baseline_delete_forever_24
     override fun onChildDraw(
         c: Canvas,
         recyclerView: RecyclerView,
@@ -33,6 +33,7 @@ abstract class SwipeGesture(context: Context): ItemTouchHelper.SimpleCallback(0,
             .create()
             .decorate()
 
-        super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+
+        super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
     }
 }

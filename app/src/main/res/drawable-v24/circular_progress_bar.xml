@@ -5,12 +5,12 @@
     <shape
         android:innerRadiusRatio="2.5"
         android:shape="ring"
-        android:thickness="2dp"
+        android:thickness="3dp"
         android:useLevel="true">
         <gradient
             android:angle="0"
-            android:endColor="@color/black"
-            android:startColor="@color/black"
+            android:endColor="#F44336"
+            android:startColor="#F44336"
             android:type="sweep"
             android:useLevel="false" />
     </shape>

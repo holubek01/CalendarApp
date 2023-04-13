@@ -5,7 +5,7 @@
     android:id="@+id/addtasklayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AddTaskActivity">
+    tools:context=".activities.ShowTaskActivity">
 
 
     <TextView
@@ -15,9 +15,10 @@
         android:layout_marginLeft="40dp"
         android:layout_marginRight="40dp"
         android:layout_marginBottom="40dp"
+        android:layout_marginTop="30dp"
         android:text="Sprzątanie"
         android:textAlignment="center"
-        android:textSize="28sp"
+        android:textSize="40sp"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -25,20 +26,16 @@
         app:layout_constraintVertical_bias="0.242" />
 
 
-
-
-
-
     <Button
         android:id="@+id/cancelbtn"
-        style="?attr/materialButtonOutlinedStyle"
+        style="?attr/materialIconButtonOutlinedStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:onClick="backToCalendar"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:text="cancel"
+        android:text="Powrót"
         android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -47,19 +44,16 @@
 
     <ImageView
         android:id="@+id/img"
-        android:layout_width="150dp"
+        android:layout_width="match_parent"
         android:layout_height="150dp"
-        android:layout_margin="20dp"
-        android:drawablePadding="20dp"
-        android:padding="20dp"
-        app:layout_constraintBottom_toTopOf="@+id/info"
+        android:layout_marginLeft="40dp"
+        android:layout_marginRight="40dp"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.444"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addtitle"
-        app:layout_constraintVertical_bias="0.14"
-
-
+        app:layout_constraintVertical_bias="0.434"
         tools:background="@tools:sample/backgrounds/scenic" />
 
     <LinearLayout
@@ -91,9 +85,11 @@
                 android:background="@color/teal_700"
                 android:textAlignment="center"
 
+                android:textColor="@color/white"
                 android:maxLines="1"
+                android:padding="5dp"
                 android:text="Data"
-                android:textSize="12sp" />
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/dataTxt"
@@ -105,6 +101,7 @@
 
         <LinearLayout
             android:layout_width="0dp"
+
             android:layout_height="match_parent"
             android:layout_marginLeft="5dp"
             android:layout_marginRight="5dp"
@@ -114,6 +111,8 @@
 
             <TextView
                 android:id="@+id/startt"
+                android:padding="5dp"
+                android:textColor="@color/white"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:drawableLeft="@drawable/ic_baseline_access_time_24"
@@ -122,7 +121,7 @@
 
                 android:maxLines="1"
                 android:text="Początek"
-                android:textSize="12sp" />
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/startTimeTxt"
@@ -143,6 +142,8 @@
 
             <TextView
                 android:id="@+id/endd"
+                android:padding="5dp"
+                android:textColor="@color/white"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:drawableLeft="@drawable/ic_baseline_access_time_24"
@@ -151,7 +152,7 @@
 
                 android:maxLines="1"
                 android:text="Koniec"
-                android:textSize="12sp" />
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@id/endTimeTxt"
@@ -173,6 +174,7 @@
         android:background="@drawable/edit_text_background"
         android:ems="10"
         android:gravity="start|top"
+        android:textSize="20sp"
         android:hint="Dodaj notatkę"
         android:inputType="textMultiLine"
         android:padding="7dp"

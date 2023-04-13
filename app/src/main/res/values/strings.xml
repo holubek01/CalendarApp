@@ -1,11 +1,12 @@
 <resources>
-    <string name="app_name">CalendarApp</string>
+    <string name="app_name">Organize Yourself</string>
     <string name="details">Please fill all the details!</string>
     <string name="emptyTime">Time cannot be empty</string>
     <string name="emptyDate">Date cannot be empty</string>
     <string name="emptyName">Name cannot be empty</string>
     <string name="startAfterEnd">Start could not be after end</string>
     <string name="success">Successfully added task to calendar!</string>
+    <string name="successUpdate">Successfully updated task!</string>
     <string name="bad_hours">Tasks could not overlap</string>
     <string name="title_activity_show_task">ShowTaskActivity</string>
     <!-- Strings used for fragments for navigation -->
