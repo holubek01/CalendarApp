@@ -30,7 +30,7 @@ class CustomAdapter(
 
     private var mListener: OnItemClickListener? = null
     private lateinit var todaysEvents: List<Event>
-    val calendar = Calendar.getInstance(Locale("pl", "PL"))
+    val calendar: Calendar = Calendar.getInstance(Locale("pl", "PL"))
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -54,7 +54,7 @@ class CustomAdapter(
         holder.progressBar.progress = 0
 
         //odfiltruj wszystkie taski z dzisiaj i oblicz dla nich progres
-        todaysEvents = eventMap.filter { p -> p.date == LocalDate.parse(LocalDateTime.ofInstant(calendar.toInstant(), calendar.getTimeZone().toZoneId()).toLocalDate()
+        todaysEvents = eventMap.filter { p -> p.date == LocalDate.parse(LocalDateTime.ofInstant(calendar.toInstant(), calendar.timeZone.toZoneId()).toLocalDate()
             .toString(),DateTimeFormatter.ofPattern("yyyy-MM-dd"));}.toList()
 
         holder.progressBar.progress = round(countDayProgress(todaysEvents)).toInt()

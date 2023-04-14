@@ -170,6 +170,9 @@
             android:id="@+id/info"
             android:layout_width="match_parent"
             android:layout_height="200dp"
+            android:textColorHint="@color/black"
+
+
             android:layout_margin="10dp"
             android:background="@drawable/edit_text_background"
             android:ems="10"

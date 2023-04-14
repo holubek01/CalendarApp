@@ -3,10 +3,7 @@ package com.example.calendarapp.activities
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
-import android.view.View
-import android.view.ViewGroup
-import android.view.Window
-import android.view.WindowManager
+import android.view.*
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -26,18 +23,6 @@ import com.example.calendarapp.db.Event
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.*
-
-
-//TODO: On restore data
-//selected day
-//eventmap
-
-
-
-//TODO: na long click można edytować
-//TODO: jesli czas trwania jest < 30 minut to ustaw inny layout
-
-//TODO: po anulowaniu dodawania taska scrolluj do pozycji
 
 class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
 
@@ -94,13 +79,13 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putParcelableArrayList("key", eventList);
+        outState.putParcelableArrayList("eventList", eventList)
         outState.putInt("selectedDay", selectedDay)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        eventList = savedInstanceState.getParcelableArrayList("key")!!
+        eventList = savedInstanceState.getParcelableArrayList("eventList", Event::class.java)!!
         adapter2.updateEventList(eventList)
         adapter.updateEventList(eventList)
 
@@ -135,7 +120,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
     private var resultLauncher3 = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
     {
             result -> val data = result.data
-        var tmpEvent = data!!.getParcelableExtra("event", Event::class.java)!!
+        val tmpEvent = data!!.getParcelableExtra("event", Event::class.java)!!
 
         //update taska
         eventList[data.getIntExtra("position",0)] = tmpEvent
@@ -162,7 +147,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
     private var resultLauncher2 = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
     {
             result -> val data = result.data
-        selectedDay = data!!.getIntExtra("selectedDay", 0).toInt()
+        selectedDay = data!!.getIntExtra("selectedDay", 0)
     }
 
 
@@ -171,14 +156,23 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
 
         super.onCreate(savedInstanceState)
 
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            supportRequestWindowFeature(Window.FEATURE_NO_TITLE)
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN
+            )
 
-        if(resources.configuration.orientation== Configuration.ORIENTATION_LANDSCAPE) {
-            supportRequestWindowFeature(Window.FEATURE_NO_TITLE) // ukrycie tytułu aplikacji
-            window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN) // ustawienie trybu pełnoekranowego
+            window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    )
         }
 
-
         setContentView(R.layout.activity_main)
+
+
 
         calendarView = findViewById(R.id.calendar_recycler_view)
         eventView = findViewById(R.id.calendar_recycler_view_2)
@@ -197,7 +191,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
             place = TaskType.FRIENDS,
             color = TaskType.FRIENDS.color,
             start = "00:00",
-            end = "01:00",
+            end = "00:20",
             info = "jakies dodatkowe info"
         )
         )
@@ -210,7 +204,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
                 place = TaskType.JOB,
                 color = TaskType.JOB.color,
                 start = "03:00",
-                end = "04:00",
+                end = "03:40",
                 info = "jakies dodatkowe info"
             )
         )
@@ -344,7 +338,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
                 if (ItemTouchHelper.LEFT == direction)
                 {
                     adapter2.setAnimation(false)
-                    val pos = viewHolder.adapterPosition
+                    val pos = viewHolder.absoluteAdapterPosition
                     adapter2.deleteItem(pos)
 
                     //eventList.remove(eventList.filter { p -> p.date == LocalDate.parse(datetosee,
@@ -456,7 +450,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
     private var resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
     {
             result -> val data = result.data
-        var tmpEvent = data!!.getParcelableExtra("event", Event::class.java)!!
+        val tmpEvent = data!!.getParcelableExtra("event", Event::class.java)!!
         eventList.add(tmpEvent)
 
         //cofnięcie do daty nowo utworzonego taska

@@ -29,20 +29,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/txtCurrentDate"
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="current date"
-            android:textAppearance="@android:style/TextAppearance.Medium"
-            android:textSize="25sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_gravity="center"
+            android:layout_marginTop="8dp"
+            android:onClick="addTask"
+            android:src="@drawable/baseline_add_24"
+            android:textAlignment="center"
+            app:layout_constraintEnd_toStartOf="@+id/next_month_button"
+            app:layout_constraintHorizontal_bias="0.497"
+            app:layout_constraintStart_toEndOf="@+id/prev_month_button"
             app:layout_constraintTop_toTopOf="parent" />
-
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:textAlignment="center"
@@ -57,17 +57,18 @@
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/button"
-        android:textAlignment="center"
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/txtCurrentDate"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginBottom="15dp"
-        android:onClick="addTask"
-        android:src="@drawable/baseline_add_24" />
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:text="current date"
+        android:textAppearance="@android:style/TextAppearance.Medium"
+        android:textSize="25sp"
+        android:textStyle="bold" />
+
+
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/calendar_recycler_view"

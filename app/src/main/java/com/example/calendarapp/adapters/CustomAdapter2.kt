@@ -1,6 +1,7 @@
 package com.example.calendarapp.adapters
 
 
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,12 +9,12 @@ import android.view.animation.AnimationUtils
 import android.widget.*
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.calendarapp.R
 import com.example.calendarapp.db.Event
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import kotlin.collections.ArrayList
 
 
 class CustomAdapter2(
@@ -40,10 +41,7 @@ class CustomAdapter2(
 
     fun deleteItem(i: Int)
     {
-        //nie może być removeAt bo są dodawane nie po kolei
-        //eventMap.removeAt(i)
-
-        var pos = eventMap.indexOf(todaysEvents[i])
+        val pos = eventMap.indexOf(todaysEvents[i])
         eventMap.remove(todaysEvents[i])
         if (eventMap.size!=0) todaysEvents.removeAt(i)
         this.notifyItemRemoved(pos)
@@ -104,23 +102,55 @@ class CustomAdapter2(
 
             val h = countTimeDifferece(endTime, startTime)
 
-            holder.img.setBackgroundResource(item.place.img)
-
             val params = holder.cardView.layoutParams as ViewGroup.MarginLayoutParams
             params.height = h
 
-            //jak znaleźć odpowiedni margin ?
-            //funkcja szukająca poprzedniego taska (jego czasu zakończenia)
+
+            Glide.with(holder.cardView)
+                .load(item.place.img)
+                .into(holder.img)
 
 
             params.topMargin = findLastTaskEndTime(startTime, todaysEvents)
             holder.cardView.layoutParams = params
             holder.task.text = item.title
             holder.cardView.setBackgroundResource(item.place.color)
-            //holder.cardView.setBackgroundColor(item.place.color)
-            //holder.cardView.setCardBackgroundColor(item.place.color)
             holder.startDate.text = start
             holder.endDate.text = end
+
+
+            //mniejsza wysokość niż 160 px
+            /*
+            if (h in 150..160)
+            {
+                val layoutParams: ViewGroup.LayoutParams =holder.img.layoutParams
+                layoutParams.width = 100
+                layoutParams.height = 140
+                holder.img.layoutParams = layoutParams
+            }
+
+             */
+            if(h<=160)
+            {
+                holder.img.visibility = View.GONE
+                holder.task.textSize = 20F
+                holder.task.gravity = Gravity.CENTER
+                holder.startDate.textSize = 15F
+                holder.endDate.textSize = 15F
+            }
+
+            if (h<128)
+            {
+                holder.task.textSize = 16F
+                holder.startDate.textSize = 12F
+                holder.endDate.textSize = 12F
+            }
+            if (h<=90)
+            {
+                holder.task.textSize = 14F
+                holder.startDate.visibility = View.GONE
+                holder.endDate.visibility = View.GONE
+            }
         }
     }
 

@@ -4,11 +4,14 @@ import android.app.Activity
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
+import android.view.View
 import android.view.Window
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.example.calendarapp.R
 import com.example.calendarapp.db.Event
 
@@ -17,10 +20,20 @@ class ShowTaskActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if(resources.configuration.orientation== Configuration.ORIENTATION_LANDSCAPE) {
-            supportRequestWindowFeature(Window.FEATURE_NO_TITLE) // ukrycie tytułu aplikacji
-            window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN) // ustawienie trybu pełnoekranowego
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            supportRequestWindowFeature(Window.FEATURE_NO_TITLE)
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN
+            )
+
+            window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    )
         }
+
         setContentView(R.layout.activity_show_task)
 
         val title = findViewById<TextView>(R.id.addtitle)
@@ -48,7 +61,10 @@ class ShowTaskActivity : AppCompatActivity() {
         startTxt.text = item.start
         endTxt.text = item.end
         info.text = item.info
-        img.setBackgroundResource(item.place.img)
+
+        Glide.with(this)
+            .load(item.place.img)
+            .into(img)
     }
 
 }

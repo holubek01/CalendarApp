@@ -7,12 +7,23 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
 import com.example.calendarapp.R
 import com.example.calendarapp.activities.AddTaskActivity
 
 
-class PlaceAdapter(private val contect: Context, val placelist: MutableList<AddTaskActivity.Place>) : BaseAdapter() {
+class PlaceAdapter(private val contect: Context, private val placelist: MutableList<AddTaskActivity.Place>) : BaseAdapter() {
 
+    class ItemHolder(view: View){
+        private val txtName:TextView
+        val img:ImageView
+
+        init{
+            txtName = view.findViewById(R.id.name)
+            img = view.findViewById(R.id.image)
+
+        }
+    }
     override fun getCount(): Int {
         return placelist.size
     }
@@ -25,16 +36,31 @@ class PlaceAdapter(private val contect: Context, val placelist: MutableList<AddT
         return position.toLong()
     }
 
+    /*
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
         val view = LayoutInflater.from(contect).inflate(R.layout.item_place, parent, false)
         val txtName = view.findViewById<TextView>(R.id.name)
         val img = view.findViewById<ImageView>(R.id.image)
-
         txtName.text = placelist.get(position).name
         img.setImageResource(placelist.get(position).img)
+        return view
+    }
+
+     */
+
+
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+        val view = LayoutInflater.from(contect).inflate(R.layout.item_place, parent, false)
+        val txtName = view.findViewById<TextView>(R.id.name)
+
+        val viewHolder= ItemHolder(view)
+        txtName.text = placelist[position].name
+
+        Glide.with(view)
+            .load(placelist[position].img)
+            .into(viewHolder.img)
 
         return view
-
     }
 
 

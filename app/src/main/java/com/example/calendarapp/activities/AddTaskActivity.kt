@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.view.View
 import android.view.Window
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -39,10 +40,20 @@ class AddTaskActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if(resources.configuration.orientation== Configuration.ORIENTATION_LANDSCAPE) {
-            supportRequestWindowFeature(Window.FEATURE_NO_TITLE) // ukrycie tytułu aplikacji
-            window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN) // ustawienie trybu pełnoekranowego
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            supportRequestWindowFeature(Window.FEATURE_NO_TITLE)
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN
+            )
+
+            window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    )
         }
+
         setContentView(R.layout.activity_add_task)
         super.setTitle("Organize yourself")
 
@@ -64,10 +75,10 @@ class AddTaskActivity : AppCompatActivity() {
         dateTxt = findViewById(R.id.dataTxt)
 
 
-        placeList.add(Place("Obowiązki domowe", R.drawable.home))
-        placeList.add(Place("Praca", R.drawable.job))
-        placeList.add(Place("Znajomi", R.drawable.friends))
-        placeList.add(Place("Hobby", R.drawable.hobby))
+        placeList.add(Place("Obowiązki domowe", TaskType.HOME.img))
+        placeList.add(Place("Praca", TaskType.JOB.img))
+        placeList.add(Place("Znajomi", TaskType.FRIENDS.img))
+        placeList.add(Place("Hobby", TaskType.HOBBY.img))
 
         spinner = findViewById(R.id.spinner)
 
@@ -80,7 +91,7 @@ class AddTaskActivity : AppCompatActivity() {
         date.setOnClickListener{datePicker()}
 
         findViewById<TextView>(R.id.cancelbtn).setOnClickListener{
-            var myIntent = Intent()
+            val myIntent = Intent()
             myIntent.putExtra("event", eventToAdd)
             myIntent.putExtra("position", position)
 
@@ -93,12 +104,7 @@ class AddTaskActivity : AppCompatActivity() {
         if (eventToAdd.title!="No title")
         {
             taskName.text = eventToAdd.title
-            var id = 0
-            if (eventToAdd.place == TaskType.HOME) id=0
-            else if (eventToAdd.place == TaskType.JOB) id=1
-            else if (eventToAdd.place == TaskType.FRIENDS) id=2
-            else if (eventToAdd.place == TaskType.HOBBY) id=3
-
+            val id = eventToAdd.place.id
             spinner.setSelection(id)
             //spinner.setSelection(spinner.adapter.getItemId(eventToAdd.place))
 
@@ -111,10 +117,10 @@ class AddTaskActivity : AppCompatActivity() {
 
     private fun chooseStartTime() {
         val cal= Calendar.getInstance()
-        val timeSetListener= TimePickerDialog.OnTimeSetListener{ view, hour, minute->
+        val timeSetListener= TimePickerDialog.OnTimeSetListener{ _, hour, minute->
             cal.set(Calendar.HOUR_OF_DAY,hour)
             cal.set(Calendar.MINUTE,minute)
-            startTimeTxt.text= SimpleDateFormat("HH:mm").format(cal.time)
+            startTimeTxt.text= SimpleDateFormat("HH:mm", Locale.ENGLISH).format(cal.time)
         }
         TimePickerDialog(this, timeSetListener, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
     }
@@ -125,10 +131,10 @@ class AddTaskActivity : AppCompatActivity() {
         val cal= Calendar.getInstance()
 
 
-        val timeSetListener= TimePickerDialog.OnTimeSetListener{ view, hour, minute->
+        val timeSetListener= TimePickerDialog.OnTimeSetListener{ _, hour, minute->
             cal.set(Calendar.HOUR_OF_DAY,hour)
             cal.set(Calendar.MINUTE,minute)
-            endTimeTxt.text= SimpleDateFormat("HH:mm").format(cal.time)
+            endTimeTxt.text= SimpleDateFormat("HH:mm",Locale.ENGLISH).format(cal.time)
         }
 
 
@@ -140,13 +146,13 @@ class AddTaskActivity : AppCompatActivity() {
 
     }
 
-    fun datePicker() {
+    private fun datePicker() {
         val cal= Calendar.getInstance()
-        val dateSetListener= DatePickerDialog.OnDateSetListener{ view, year, month, day ->
+        val dateSetListener= DatePickerDialog.OnDateSetListener{ _, year, month, day ->
             cal.set(Calendar.YEAR,year)
             cal.set(Calendar.MONTH,month)
             cal.set(Calendar.DAY_OF_MONTH,day)
-            dateTxt.text=SimpleDateFormat("yyyy-MM-dd").format(cal.time)
+            dateTxt.text=SimpleDateFormat("yyyy-MM-dd",Locale.ENGLISH).format(cal.time)
         }
         DatePickerDialog(this,dateSetListener,cal.get(Calendar.YEAR),cal.get(Calendar.MONTH),cal.get(
             Calendar.DAY_OF_MONTH)).show()
@@ -164,7 +170,7 @@ class AddTaskActivity : AppCompatActivity() {
         finish()
     }
 
-    inner class Place(val name: String, val img: Int) : java.io.Serializable
+    inner class Place(val name: String, val img: String) : java.io.Serializable
 
     fun backToCalendar(view: View) {
         finish()
@@ -208,8 +214,8 @@ class AddTaskActivity : AppCompatActivity() {
         }
 
         //początek nie może być po końcu
-        var startTime = LocalTime.parse(startTimeTxt.text, DateTimeFormatter.ISO_TIME)
-        var endTime = LocalTime.parse(endTimeTxt.text, DateTimeFormatter.ISO_TIME)
+        val startTime = LocalTime.parse(startTimeTxt.text, DateTimeFormatter.ISO_TIME)
+        val endTime = LocalTime.parse(endTimeTxt.text, DateTimeFormatter.ISO_TIME)
 
         val hourDiff = endTime.hour - startTime.hour
         val minutesDiff = endTime.minute - startTime.minute
@@ -227,15 +233,15 @@ class AddTaskActivity : AppCompatActivity() {
 
         //sprzawdzić czy nie ma już tasków w tym dniu o tej dacie
 
-        var lista = eventList
+        val lista = eventList
             .filter { p -> p.date == LocalDate.parse(dateTxt.text,DateTimeFormatter.ofPattern("yyyy-MM-dd"));}
 
 
         //nie mogą nachodzić na siebie taski
         for (item in lista)
         {
-            var start = LocalTime.parse(item.start, DateTimeFormatter.ISO_TIME)
-            var end = LocalTime.parse(item.end, DateTimeFormatter.ISO_TIME)
+            val start = LocalTime.parse(item.start, DateTimeFormatter.ISO_TIME)
+            val end = LocalTime.parse(item.end, DateTimeFormatter.ISO_TIME)
 
 
             if ((startTime.isBefore(end) && endTime.isAfter(end)) ||      //zacyzna sie w srodku i zachodzi
@@ -290,13 +296,13 @@ class AddTaskActivity : AppCompatActivity() {
 
 
 
-        var type : TaskType = if (spinner.selectedItem == 0) TaskType.HOME
+        val type : TaskType = if (spinner.selectedItem == 0) TaskType.HOME
         else if (spinner.selectedItem == 1) TaskType.JOB
         else if (spinner.selectedItem == 2) TaskType.FRIENDS
         else TaskType.HOBBY
 
 
-        eventToAdd.date= LocalDate.parse(dateTxt.text, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        eventToAdd.date= LocalDate.parse(dateTxt.text, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         eventToAdd.title = taskName.text.toString()
 
         eventToAdd.place = type
