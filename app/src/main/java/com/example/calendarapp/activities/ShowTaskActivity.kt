@@ -57,13 +57,13 @@ class ShowTaskActivity : AppCompatActivity() {
         val item : Event = intent.getParcelableExtra("event", Event::class.java)!!
 
         title.text = item.title
-        dataTxt.text = item.date.toString()
+        dataTxt.text = item.date().toString()
         startTxt.text = item.start
         endTxt.text = item.end
         info.text = item.info
 
         Glide.with(this)
-            .load(item.place.img)
+            .load(item.place()!!.img)
             .into(img)
     }
 

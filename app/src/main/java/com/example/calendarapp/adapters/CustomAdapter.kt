@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.calendarapp.R
 import com.example.calendarapp.db.Event
+import com.example.calendarapp.db.EventDao
 import java.util.*
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -25,7 +26,8 @@ import kotlin.math.round
 class CustomAdapter(
     private val data: ArrayList<Date>,
     private val currentDate: Calendar,
-    private var eventMap: ArrayList<Event>
+    private var eventMap: ArrayList<Event>,
+    private val itemDao: EventDao
 ) : RecyclerView.Adapter<CustomAdapter.ViewHolder>()  {
 
     private var mListener: OnItemClickListener? = null
@@ -44,6 +46,7 @@ class CustomAdapter(
 
         calendar.time = data[position]
 
+
         //ustawienie wyglądu dni
         holder.txtDay.setTextColor(Color.WHITE)
         holder.txtDayInWeek.setTextColor(Color.WHITE)
@@ -54,7 +57,7 @@ class CustomAdapter(
         holder.progressBar.progress = 0
 
         //odfiltruj wszystkie taski z dzisiaj i oblicz dla nich progres
-        todaysEvents = eventMap.filter { p -> p.date == LocalDate.parse(LocalDateTime.ofInstant(calendar.toInstant(), calendar.timeZone.toZoneId()).toLocalDate()
+        todaysEvents = eventMap.filter { p -> p.date() == LocalDate.parse(LocalDateTime.ofInstant(calendar.toInstant(), calendar.timeZone.toZoneId()).toLocalDate()
             .toString(),DateTimeFormatter.ofPattern("yyyy-MM-dd"));}.toList()
 
         holder.progressBar.progress = round(countDayProgress(todaysEvents)).toInt()
@@ -62,6 +65,8 @@ class CustomAdapter(
         holder.txtDayInWeek.text = dateFormat.format(calendar.time).toString().split(" ")[0]
         holder.txtDay.text = calendar[Calendar.DAY_OF_MONTH].toString()
 
+        println("fifi")
+        println(todaysEvents.size)
 
 
 

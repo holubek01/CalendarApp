@@ -12,6 +12,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.calendarapp.R
 import com.example.calendarapp.db.Event
+import com.example.calendarapp.db.EventDao
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -22,7 +25,8 @@ class CustomAdapter2(
     private var selectedDate: String,   //format yyyy-MM-dd
     var prevSelected: Int,
     var recyclerViewItemInterface: RecyclerViewItemInterface,
-    var shouldAnimate: Boolean
+    var shouldAnimate: Boolean,
+    private val itemDao: EventDao
 
 ) : RecyclerView.Adapter<CustomAdapter2.ViewHolder>() {
 
@@ -42,8 +46,11 @@ class CustomAdapter2(
     fun deleteItem(i: Int)
     {
         val pos = eventMap.indexOf(todaysEvents[i])
+        GlobalScope.launch { itemDao.deleteById(todaysEvents[i].id) }
         eventMap.remove(todaysEvents[i])
         if (eventMap.size!=0) todaysEvents.removeAt(i)
+
+
         this.notifyItemRemoved(pos)
     }
 
@@ -53,7 +60,7 @@ class CustomAdapter2(
         this.selectedDate = datetosee
         this.prevSelected = prevSelected
         this.shouldAnimate = shouldAnimate
-        todaysEvents = eventMap.filter { p -> p.date == LocalDate.parse(selectedDate,DateTimeFormatter.ofPattern("yyyy-MM-dd"))}.toMutableList()
+        todaysEvents = eventMap.filter { p -> p.date() == LocalDate.parse(selectedDate,DateTimeFormatter.ofPattern("yyyy-MM-dd"))}.toMutableList()
         notifyDataSetChanged()
     }
 
@@ -89,8 +96,10 @@ class CustomAdapter2(
 
 
 
-        todaysEvents = eventMap.filter { p -> p.date == LocalDate.parse(selectedDate,DateTimeFormatter.ofPattern("yyyy-MM-dd"))}.toMutableList()
+        todaysEvents = eventMap.filter { p -> p.date() == LocalDate.parse(selectedDate,DateTimeFormatter.ofPattern("yyyy-MM-dd"))}.toMutableList()
 
+        println("roro")
+        println(todaysEvents.size)
         val item = todaysEvents[position]
         if (item in todaysEvents)
         {
@@ -107,14 +116,14 @@ class CustomAdapter2(
 
 
             Glide.with(holder.cardView)
-                .load(item.place.img)
+                .load(item.place()!!.img)
                 .into(holder.img)
 
 
             params.topMargin = findLastTaskEndTime(startTime, todaysEvents)
             holder.cardView.layoutParams = params
             holder.task.text = item.title
-            holder.cardView.setBackgroundResource(item.place.color)
+            holder.cardView.setBackgroundResource(item.place()!!.color)
             holder.startDate.text = start
             holder.endDate.text = end
 
@@ -211,7 +220,7 @@ class CustomAdapter2(
 
 
     override fun getItemCount(): Int {
-        val tmpList = eventMap.filter { p -> p.date == LocalDate.parse(selectedDate,DateTimeFormatter.ofPattern("yyyy-MM-dd"));}
+        val tmpList = eventMap.filter { p -> p.date() == LocalDate.parse(selectedDate,DateTimeFormatter.ofPattern("yyyy-MM-dd"));}
         return tmpList.size
     }
 

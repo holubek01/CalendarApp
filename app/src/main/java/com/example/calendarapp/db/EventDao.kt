@@ -1,35 +1,31 @@
-/*package com.example.calendarapp.db
+package com.example.calendarapp.db
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
+import androidx.room.*
 
 @Dao
 interface EventDao {
-    @Query("SELECT * FROM SimpleEvent")
-    fun getAll(): MutableList<SimpleEvent>
+    @Query("SELECT * FROM Event")
+    fun getAll(): MutableList<Event>
 
 
     //jeśli użyjemy @insert to tak jak w Springu Room zrobi to za nas
 
     //Możemy użyć upsert (nowe), które jeśli wiersz istnieje
     //to go nadpisze a nie zwróci abort
-    //@Insert
-    //suspend fun insertAll(vararg items: SimpleEvent)
+    @Upsert
+    suspend fun insertAll(vararg items: Event)
 
     @Delete
-    suspend fun delete(item: SimpleEvent)
+    suspend fun delete(item: Event)
 
-    @Query("DELETE FROM SimpleEvent")
+    @Query("DELETE FROM Event")
     fun deleteAll()
 
-    @Query("DELETE FROM SimpleEvent WHERE id=:id")
+    @Query("DELETE FROM Event WHERE id=:id")
     fun deleteById(id:Int)
 
-    //tutaj nadpisujemy inserta
-    @Query("INSERT INTO SimpleEvent(date,title,place,color,start,end,info) VALUES(:title, :date, :place, :color, :start, :end, :info)")
-    fun insert(title:String, date: String, place:String, color:Int, start: String, end:String, info:String)
+    //@Query("INSERT INTO Event(date,title,place,color,start,end,info) VALUES(:title, :date, :place, :color, :start, :end, :info)")
+    //fun insert(title:String, date: String, place:String, color:Int, start: String, end:String, info:String)
 }
 
- */
+

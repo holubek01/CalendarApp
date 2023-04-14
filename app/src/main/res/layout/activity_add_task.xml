@@ -194,6 +194,7 @@
         android:background="@drawable/edit_text_background"
         android:ems="10"
         android:textColorHint="@color/black"
+        android:textColor="@color/black"
         android:gravity="start|top"
         android:hint="Dodaj notatkę"
         android:inputType="textMultiLine"

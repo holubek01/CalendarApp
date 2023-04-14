@@ -14,18 +14,26 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Room
 import com.example.calendarapp.*
 import com.example.calendarapp.adapters.CustomAdapter
 import com.example.calendarapp.adapters.CustomAdapter2
 import com.example.calendarapp.adapters.RecyclerViewItemInterface
 import com.example.calendarapp.adapters.SwipeGesture
+import com.example.calendarapp.db.AppDatabase
 import com.example.calendarapp.db.Event
+import com.example.calendarapp.db.EventDao
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.*
 
 class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
 
+    //TODO: UPDATE
 
     private val months = mapOf(1 to "Styczeń", 2 to "Luty",
         3 to "Marzec" ,
@@ -45,6 +53,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
 
     private lateinit var calendarView: RecyclerView
     private lateinit var eventView: RecyclerView
+    private lateinit var itemDao: EventDao
     private lateinit var eventToAdd : Event
     private lateinit var datetosee : String
     private lateinit var txtCurrentDate : TextView
@@ -89,7 +98,6 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
         adapter2.updateEventList(eventList)
         adapter.updateEventList(eventList)
 
-
         adapter2.notifyDataSetChanged()
         adapter.notifyDataSetChanged()
         selectedDay = savedInstanceState.getInt("selectedDay")
@@ -125,10 +133,12 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
         //update taska
         eventList[data.getIntExtra("position",0)] = tmpEvent
 
+        GlobalScope.launch { itemDao.insertAll(tmpEvent) }
+
         //cofnięcie do daty nowo utworzonego taska
 
         //narazie daje mozliwość updatowania także daty
-        selectedDay = tmpEvent.date.dayOfMonth
+        selectedDay = tmpEvent.date()!!.dayOfMonth
 
         datetosee = dateFormat2.format(dates[selectedDay-1])
 
@@ -172,6 +182,12 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
 
         setContentView(R.layout.activity_main)
 
+        val db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, getString(R.string.dbName)
+        ).build()
+        itemDao=db.itemDao()
+
 
 
         calendarView = findViewById(R.id.calendar_recycler_view)
@@ -182,72 +198,51 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
         eventListBackgrund.setBackgroundResource(R.drawable.bbbb)
         datetosee = dateFormat2.format(calendar.time)
 
-
-
-        eventList.add(
-            Event(
-            date = LocalDate.of(2023,4,10),
-            title = "Event 420",
-            place = TaskType.FRIENDS,
-            color = TaskType.FRIENDS.color,
-            start = "00:00",
-            end = "00:20",
-            info = "jakies dodatkowe info"
-        )
-        )
-
-
-        eventList.add(
-            Event(
-                date = LocalDate.of(2023,4,10),
-                title = "Event 460",
-                place = TaskType.JOB,
-                color = TaskType.JOB.color,
-                start = "03:00",
-                end = "03:40",
-                info = "jakies dodatkowe info"
-            )
-        )
-
-
-        eventList.add(
-            Event(
-                date = LocalDate.of(2023,4,12),
-                title = "Event 460",
-                place = TaskType.HOME,
-                color = TaskType.HOBBY.color,
-                start = "05:00",
-                end = "07:00",
-                info = "jakies dodatkowe info"
-            )
-        )
-
-
-
-
-
-        eventList.add(
-            Event(
-                date = LocalDate.of(2023,4,10),
-                title = "Event 460",
-                place = TaskType.HOBBY,
-                color = TaskType.HOBBY.color,
-                start = "11:00",
-                end = "14:00",
-                info = "jakies dodatkowe info"
-            )
-        )
-
-
-
-
-
         val snapHelper = LinearSnapHelper()
         snapHelper.attachToRecyclerView(calendarView)
 
+        println("eveeee")
+        println(eventList.size)
+
         setUpCalendar()
+        refreshItems()
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun refreshItems(){
+
+        val e = Event(
+            dateString = LocalDate.of(2023,4,10).toString(),
+            title = "Event 111",
+            place = TaskType.FRIENDS.toString(),
+            color = TaskType.FRIENDS.color,
+            start = "00:00",
+            end = "02:20",
+            info = "jakies dodatkowe info"
+        )
+
+
+        GlobalScope.launch {
+            //itemDao.deleteAll()
+            //itemDao.insertAll(e)
+            eventList = itemDao.getAll() as ArrayList<Event>
+            adapter.updateEventList(eventList)
+            adapter2.updateEventList(eventList)
+        }
+
+
+        //w bazie sa juz 22 rzeczy
+        /*
+        GlobalScope.launch {
+            val eventListDeferred = async { itemDao.getAll() as ArrayList<Event> }
+            val eventList = eventListDeferred.await()
+
+        }
+
+         */
+
+
+    }
 
 
 
@@ -321,7 +316,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
             eventView.layoutManager =  LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         }
 
-        adapter = CustomAdapter(dates, currentDate, eventList)
+        adapter = CustomAdapter(dates, currentDate, eventList, itemDao)
         calendarView.adapter = adapter
 
         if (currentMonth == selectedMonth) calendarView.scrollToPosition(currentDay-1)
@@ -329,7 +324,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
 
 
 
-        adapter2 = CustomAdapter2(eventList, datetosee, prevSelectedDay, this@MainActivity,shouldAnimate)
+        adapter2 = CustomAdapter2(eventList, datetosee, prevSelectedDay, this@MainActivity,shouldAnimate, itemDao)
         eventView.adapter = adapter2
 
         val swipeGesture = object : SwipeGesture(this)
@@ -340,9 +335,6 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
                     adapter2.setAnimation(false)
                     val pos = viewHolder.absoluteAdapterPosition
                     adapter2.deleteItem(pos)
-
-                    //eventList.remove(eventList.filter { p -> p.date == LocalDate.parse(datetosee,
-                      //  DateTimeFormatter.ofPattern("yyyy-MM-dd"))}.toMutableList()[pos])
                     adapter.notifyDataSetChanged()
 
 
@@ -431,7 +423,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
         val addIntent= Intent(this, AddTaskActivity::class.java)
 
         //przekazujemy cały event i go nadpisujemy
-        eventToAdd = Event()
+        eventToAdd = Event(LocalDate.MIN.toString(), "No title", TaskType.HOBBY.toString(), TaskType.HOBBY.color, "-1", "-1", "Brak dodatkowych informacji")
         addIntent.putExtra("event",eventToAdd)
         addIntent.putExtra("eventList",eventList)
 
@@ -451,14 +443,15 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
     {
             result -> val data = result.data
         val tmpEvent = data!!.getParcelableExtra("event", Event::class.java)!!
+
+        GlobalScope.launch { itemDao.insertAll(tmpEvent) }
         eventList.add(tmpEvent)
 
         //cofnięcie do daty nowo utworzonego taska
-        selectedDay = data.getParcelableExtra("event", Event::class.java)?.date!!.dayOfMonth
+        selectedDay = data.getParcelableExtra("event", Event::class.java)?.date()!!.dayOfMonth
 
         datetosee = dateFormat2.format(dates[selectedDay-1])
 
-        Toast.makeText(this@MainActivity, datetosee, Toast.LENGTH_SHORT).show()
 
         adapter2.setAnimation(false)
         adapter2.updateAdapterData(datetosee, prevSelectedDay, shouldAnimate)

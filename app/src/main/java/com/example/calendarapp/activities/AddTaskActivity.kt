@@ -104,11 +104,11 @@ class AddTaskActivity : AppCompatActivity() {
         if (eventToAdd.title!="No title")
         {
             taskName.text = eventToAdd.title
-            val id = eventToAdd.place.id
+            val id = eventToAdd.place()!!.id
             spinner.setSelection(id)
             //spinner.setSelection(spinner.adapter.getItemId(eventToAdd.place))
 
-            dateTxt.text =eventToAdd.date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            dateTxt.text = eventToAdd.date()!!.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             startTimeTxt.text = eventToAdd.start
             endTimeTxt.text = eventToAdd.end
             infoTxt.text = Editable.Factory.getInstance().newEditable(eventToAdd.info)
@@ -234,7 +234,7 @@ class AddTaskActivity : AppCompatActivity() {
         //sprzawdzić czy nie ma już tasków w tym dniu o tej dacie
 
         val lista = eventList
-            .filter { p -> p.date == LocalDate.parse(dateTxt.text,DateTimeFormatter.ofPattern("yyyy-MM-dd"));}
+            .filter { p -> p.date() == LocalDate.parse(dateTxt.text,DateTimeFormatter.ofPattern("yyyy-MM-dd"));}
 
 
         //nie mogą nachodzić na siebie taski
@@ -302,12 +302,12 @@ class AddTaskActivity : AppCompatActivity() {
         else TaskType.HOBBY
 
 
-        eventToAdd.date= LocalDate.parse(dateTxt.text, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        eventToAdd.dateString = LocalDate.parse(dateTxt.text, DateTimeFormatter.ofPattern("yyyy-MM-dd")).toString()
         eventToAdd.title = taskName.text.toString()
 
-        eventToAdd.place = type
+        eventToAdd.place = type.toString()
         eventToAdd.color = type.color
-        eventToAdd.place.img = type.img
+        eventToAdd.place()!!.img = type.img
 
         eventToAdd.start = startTime.toString()
         eventToAdd.end = endTime.toString()
