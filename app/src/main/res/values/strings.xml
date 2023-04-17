@@ -1,21 +1,13 @@
 <resources>
     <string name="app_name">Organize Yourself</string>
-    <string name="details">Please fill all the details!</string>
-    <string name="emptyTime">Time cannot be empty</string>
-    <string name="emptyDate">Date cannot be empty</string>
-    <string name="emptyName">Name cannot be empty</string>
-    <string name="startAfterEnd">Start could not be after end</string>
-    <string name="success">Successfully added task to calendar!</string>
-    <string name="successUpdate">Successfully updated task!</string>
-    <string name="bad_hours">Tasks could not overlap</string>
+    <string name="details">Uzupełnij wszystkie dane!</string>
+    <string name="emptyTime">Uzupełnij czasy!</string>
+    <string name="emptyDate">Uzupełnij datę</string>
+    <string name="emptyName">Uzupełnij nazwę</string>
+    <string name="startAfterEnd">Początek zadania musi być wcześniej niż koniec</string>
+    <string name="success">Poprawnie dodano nowe wydarzenie</string>
+    <string name="successUpdate">Poprawnie zaktualizowano wydarzenie</string>
+    <string name="bad_hours">Wydarzenia nie mogą na siebie nachodzić</string>
     <string name="title_activity_show_task">ShowTaskActivity</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
-    <string name="previous">Previous</string>
-
-    <string name="hello_first_fragment">Hello first fragment</string>
-    <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="dbName">Event</string>
 </resources>

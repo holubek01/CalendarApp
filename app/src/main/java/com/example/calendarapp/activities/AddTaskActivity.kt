@@ -92,6 +92,7 @@ class AddTaskActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.cancelbtn).setOnClickListener{
             val myIntent = Intent()
+            eventToAdd.id=-1
             myIntent.putExtra("event", eventToAdd)
             myIntent.putExtra("position", position)
 
@@ -106,7 +107,6 @@ class AddTaskActivity : AppCompatActivity() {
             taskName.text = eventToAdd.title
             val id = eventToAdd.place()!!.id
             spinner.setSelection(id)
-            //spinner.setSelection(spinner.adapter.getItemId(eventToAdd.place))
 
             dateTxt.text = eventToAdd.date()!!.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             startTimeTxt.text = eventToAdd.start
@@ -125,12 +125,8 @@ class AddTaskActivity : AppCompatActivity() {
         TimePickerDialog(this, timeSetListener, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
     }
 
-    //niestety nie mogę zrobić ograniczenia na interwały 15 minutowe
     private fun chooseEndTime() {
-
         val cal= Calendar.getInstance()
-
-
         val timeSetListener= TimePickerDialog.OnTimeSetListener{ _, hour, minute->
             cal.set(Calendar.HOUR_OF_DAY,hour)
             cal.set(Calendar.MINUTE,minute)
@@ -162,10 +158,8 @@ class AddTaskActivity : AppCompatActivity() {
 
     fun addTask(view: View) {
         val myIntent = Intent()
-        myIntent.putExtra("tag", "hello from 2 activity")
+        //myIntent.putExtra("tag", "hello from 2 activity")
         setResult(Activity.RESULT_OK, myIntent)
-
-
 
         finish()
     }
@@ -177,7 +171,6 @@ class AddTaskActivity : AppCompatActivity() {
     }
     fun saveTask(view: View) {
         val myIntent = Intent()
-        //Nazwa wydarzenia nie może być pusta
         if(taskName.text!!.isEmpty())
         {
             MotionToast.createColorToast(this,getString(R.string.details),getString(R.string.emptyName),
@@ -189,9 +182,6 @@ class AddTaskActivity : AppCompatActivity() {
         }
 
 
-
-
-        //data nie może być pusta
         if(dateTxt.text!!.isEmpty())
         {
             MotionToast.createColorToast(this,getString(R.string.details),getString(R.string.emptyDate),
@@ -202,7 +192,6 @@ class AddTaskActivity : AppCompatActivity() {
             return
         }
 
-        //początek i koniec nie mogą być puste
         if(startTimeTxt.text.isEmpty() || endTimeTxt.text.isEmpty())
         {
             MotionToast.createColorToast(this,getString(R.string.details),getString(R.string.emptyTime),
@@ -213,7 +202,6 @@ class AddTaskActivity : AppCompatActivity() {
             return
         }
 
-        //początek nie może być po końcu
         val startTime = LocalTime.parse(startTimeTxt.text, DateTimeFormatter.ISO_TIME)
         val endTime = LocalTime.parse(endTimeTxt.text, DateTimeFormatter.ISO_TIME)
 
@@ -231,23 +219,21 @@ class AddTaskActivity : AppCompatActivity() {
             return
         }
 
-        //sprzawdzić czy nie ma już tasków w tym dniu o tej dacie
 
         val lista = eventList
             .filter { p -> p.date() == LocalDate.parse(dateTxt.text,DateTimeFormatter.ofPattern("yyyy-MM-dd"));}
 
 
-        //nie mogą nachodzić na siebie taski
         for (item in lista)
         {
             val start = LocalTime.parse(item.start, DateTimeFormatter.ISO_TIME)
             val end = LocalTime.parse(item.end, DateTimeFormatter.ISO_TIME)
 
 
-            if ((startTime.isBefore(end) && endTime.isAfter(end)) ||      //zacyzna sie w srodku i zachodzi
-                (startTime == start && endTime == end) ||             //te same taski
-                (startTime.isAfter(start) && endTime.isBefore(end))||  //nowy task w środku starego
-                (startTime.isBefore(start) && endTime.isAfter(start)) || //nowy task zaczyna sie przed starym ale zachcza o niego
+            if ((startTime.isBefore(end) && endTime.isAfter(end)) ||
+                (startTime == start && endTime == end) ||
+                (startTime.isAfter(start) && endTime.isBefore(end))||
+                (startTime.isBefore(start) && endTime.isAfter(start)) ||
                 (startTime.isBefore(start) && endTime.isAfter(end)))
             {
                 if (item.start != eventToAdd.start && item.end != eventToAdd.end) {

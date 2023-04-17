@@ -7,6 +7,8 @@ import androidx.room.PrimaryKey
 import com.example.calendarapp.TaskType
 import kotlinx.android.parcel.Parcelize
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 
 //przy zamianie trzeba będzie jedynie zmieniać datę place
@@ -20,35 +22,21 @@ class Event(
     @ColumnInfo(name = "start") var start:String?,
     @ColumnInfo(name = "end") var end: String?,
     @ColumnInfo(name = "info") var info: String?,
-    @PrimaryKey(autoGenerate = true) val id:Int=0
+    @PrimaryKey(autoGenerate = true) var id:Int=0
 ) : Parcelable
 {
     fun date(): LocalDate? =
         if(dateString == null) LocalDate.MIN else LocalDate.parse(dateString)
 
+    fun start(): LocalTime =
+        if(start == null) LocalTime.MIN else LocalTime.parse(start, DateTimeFormatter.ISO_TIME)
 
 
-    fun place(): TaskType? = if(place == null) TaskType.HOME else TaskType.HOBBY
+    fun place(): TaskType{
+        if (place!!.contains("HOME")) return TaskType.HOME
+        if (place!!.contains("JOB")) return TaskType.JOB
+        if (place!!.contains("FRIENDS")) return TaskType.FRIENDS
+
+        return TaskType.HOBBY
+    }
 }
-/*
-        var date: LocalDate = LocalDate.MIN,
-        var title : String = "No title",
-        var place: TaskType = TaskType.HOME,
-        var color: Int = TaskType.HOME.color,
-        var start: String = "-1",
-        var end: String = "-1",
-        var info: String = "Brak dodatkowych informacji"
-
- */
-
-/*@PrimaryKey(autoGenerate = true) val id:Int = 0,
-@ColumnInfo(name = "date") var dateString: String?,
-@ColumnInfo(name = "title") var title: String,
-@ColumnInfo(name = "place") var place: String?,
-@ColumnInfo(name = "color") var color: Int,
-@ColumnInfo(name = "start") var startString:String,
-@ColumnInfo(name = "end") var endString: String)
-
- */
-    //@ColumnInfo(name = "info")var info: String) : Parcelable
-

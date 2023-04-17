@@ -12,7 +12,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.calendarapp.R
 import com.example.calendarapp.db.Event
-import com.example.calendarapp.db.EventDao
 import java.util.*
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -26,8 +25,7 @@ import kotlin.math.round
 class CustomAdapter(
     private val data: ArrayList<Date>,
     private val currentDate: Calendar,
-    private var eventMap: ArrayList<Event>,
-    private val itemDao: EventDao
+    private var eventMap: ArrayList<Event>
 ) : RecyclerView.Adapter<CustomAdapter.ViewHolder>()  {
 
     private var mListener: OnItemClickListener? = null
@@ -64,9 +62,6 @@ class CustomAdapter(
 
         holder.txtDayInWeek.text = dateFormat.format(calendar.time).toString().split(" ")[0]
         holder.txtDay.text = calendar[Calendar.DAY_OF_MONTH].toString()
-
-        println("fifi")
-        println(todaysEvents.size)
 
 
 
@@ -129,9 +124,6 @@ class CustomAdapter(
     fun updateEventList(eventList: ArrayList<Event>) {
         this.eventMap = eventList
     }
-
-
-
 
         override fun getItemCount(): Int {
         return data.size

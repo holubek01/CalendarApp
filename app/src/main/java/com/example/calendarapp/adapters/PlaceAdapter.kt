@@ -36,18 +36,6 @@ class PlaceAdapter(private val contect: Context, private val placelist: MutableL
         return position.toLong()
     }
 
-    /*
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        val view = LayoutInflater.from(contect).inflate(R.layout.item_place, parent, false)
-        val txtName = view.findViewById<TextView>(R.id.name)
-        val img = view.findViewById<ImageView>(R.id.image)
-        txtName.text = placelist.get(position).name
-        img.setImageResource(placelist.get(position).img)
-        return view
-    }
-
-     */
-
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
         val view = LayoutInflater.from(contect).inflate(R.layout.item_place, parent, false)

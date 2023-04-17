@@ -1,18 +1,18 @@
 package com.example.calendarapp.db
 
 import androidx.room.*
+import java.time.LocalTime
 
 @Dao
 interface EventDao {
     @Query("SELECT * FROM Event")
     fun getAll(): MutableList<Event>
 
+    @Query("SELECT * FROM Event ORDER BY id DESC LIMIT 1")
+    fun findLatestTask(): Event
 
-    //jeśli użyjemy @insert to tak jak w Springu Room zrobi to za nas
 
-    //Możemy użyć upsert (nowe), które jeśli wiersz istnieje
-    //to go nadpisze a nie zwróci abort
-    @Upsert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(vararg items: Event)
 
     @Delete
@@ -24,8 +24,10 @@ interface EventDao {
     @Query("DELETE FROM Event WHERE id=:id")
     fun deleteById(id:Int)
 
-    //@Query("INSERT INTO Event(date,title,place,color,start,end,info) VALUES(:title, :date, :place, :color, :start, :end, :info)")
-    //fun insert(title:String, date: String, place:String, color:Int, start: String, end:String, info:String)
+    //zwraca eventy których czas rozpoczęcia mieści się w zakresie 2 minut
+    @Query("SELECT * FROM Event WHERE time(start)>=time('now', '+2 hours') and time(start)<=time('now', '+2 hours', '+2 minutes')and date('now')==date(dateString)")
+    fun toNotify():MutableList<Event>
+
 }
 
 

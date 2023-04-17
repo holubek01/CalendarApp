@@ -1,6 +1,7 @@
 package com.example.calendarapp.adapters
 
 
+import android.graphics.Color
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +14,8 @@ import com.bumptech.glide.Glide
 import com.example.calendarapp.R
 import com.example.calendarapp.db.Event
 import com.example.calendarapp.db.EventDao
+import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -30,8 +33,6 @@ class CustomAdapter2(
 
 ) : RecyclerView.Adapter<CustomAdapter2.ViewHolder>() {
 
-
-    //5 min - 20 px
     private val periodHeight = 20
     private lateinit var todaysEvents:MutableList<Event>
 
@@ -43,15 +44,36 @@ class CustomAdapter2(
     }
 
 
-    fun deleteItem(i: Int)
+    @OptIn(DelicateCoroutinesApi::class)
+    fun deleteItem(i: Int, viewHolder: RecyclerView.ViewHolder, adapter: CustomAdapter)
     {
-        val pos = eventMap.indexOf(todaysEvents[i])
-        GlobalScope.launch { itemDao.deleteById(todaysEvents[i].id) }
-        eventMap.remove(todaysEvents[i])
+        var state=true
+        val item = todaysEvents[i]
+        val idOfDeletedItem = todaysEvents[i].id
+        eventMap.remove(item)
         if (eventMap.size!=0) todaysEvents.removeAt(i)
 
+        GlobalScope.launch{        itemDao.deleteById(idOfDeletedItem)
+        }
 
-        this.notifyItemRemoved(pos)
+
+
+        Snackbar.make(viewHolder.itemView, "Usunięto: " + item.title, Snackbar.LENGTH_LONG).setBackgroundTint(
+            Color.BLACK)
+            .setTextColor(Color.WHITE)
+            .setAction("COFNIJ") {
+                state=false
+                todaysEvents.add(item)
+                eventMap.add(item)
+                GlobalScope.launch {
+                    itemDao.insertAll(item)
+                }
+                adapter.notifyDataSetChanged()
+                this.notifyDataSetChanged()
+
+            }.show()
+
+        this.notifyDataSetChanged()
     }
 
 
@@ -60,7 +82,7 @@ class CustomAdapter2(
         this.selectedDate = datetosee
         this.prevSelected = prevSelected
         this.shouldAnimate = shouldAnimate
-        todaysEvents = eventMap.filter { p -> p.date() == LocalDate.parse(selectedDate,DateTimeFormatter.ofPattern("yyyy-MM-dd"))}.toMutableList()
+        todaysEvents = eventMap.filter { p -> p.date() == LocalDate.parse(selectedDate,DateTimeFormatter.ofPattern("yyyy-MM-dd"))}.sortedWith(compareBy<Event> { LocalTime.parse(it.start) }).toMutableList()
         notifyDataSetChanged()
     }
 
@@ -72,7 +94,6 @@ class CustomAdapter2(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
-        //po usunięciu wcale onBind.. się nie wykonuje
         if (shouldAnimate)
         {
 
@@ -96,10 +117,8 @@ class CustomAdapter2(
 
 
 
-        todaysEvents = eventMap.filter { p -> p.date() == LocalDate.parse(selectedDate,DateTimeFormatter.ofPattern("yyyy-MM-dd"))}.toMutableList()
+        todaysEvents = eventMap.filter { p -> p.date() == LocalDate.parse(selectedDate,DateTimeFormatter.ofPattern("yyyy-MM-dd"))}.sortedWith(compareBy<Event> { LocalTime.parse(it.start) }).toMutableList()
 
-        println("roro")
-        println(todaysEvents.size)
         val item = todaysEvents[position]
         if (item in todaysEvents)
         {
@@ -116,7 +135,7 @@ class CustomAdapter2(
 
 
             Glide.with(holder.cardView)
-                .load(item.place()!!.img)
+                .load(item.place().img)
                 .into(holder.img)
 
 
@@ -128,17 +147,6 @@ class CustomAdapter2(
             holder.endDate.text = end
 
 
-            //mniejsza wysokość niż 160 px
-            /*
-            if (h in 150..160)
-            {
-                val layoutParams: ViewGroup.LayoutParams =holder.img.layoutParams
-                layoutParams.width = 100
-                layoutParams.height = 140
-                holder.img.layoutParams = layoutParams
-            }
-
-             */
             if(h<=160)
             {
                 holder.img.visibility = View.GONE
@@ -226,17 +234,6 @@ class CustomAdapter2(
 
     fun updateEventList(eventList: ArrayList<Event>) {
         this.eventMap = eventList
-
-        /*
-        for (item in eventMap)
-        {
-            if (!eventMap.contains(item))
-            {
-                deleteItem(eventList.indexOf(it))
-            }
-        }
-
-         */
     }
 }
 

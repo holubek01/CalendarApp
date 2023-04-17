@@ -1,14 +1,21 @@
 package com.example.calendarapp.activities
 
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.*
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.databinding.Bindable
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,17 +30,12 @@ import com.example.calendarapp.adapters.SwipeGesture
 import com.example.calendarapp.db.AppDatabase
 import com.example.calendarapp.db.Event
 import com.example.calendarapp.db.EventDao
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.util.*
 
 class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
-
-    //TODO: UPDATE
 
     private val months = mapOf(1 to "Styczeń", 2 to "Luty",
         3 to "Marzec" ,
@@ -62,6 +64,8 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
     private lateinit var month:String
     private lateinit var year:String
 
+    private val CHANNEL_ID = "reminder_channel_id"
+
     @Bindable
     private var eventList : ArrayList<Event> = arrayListOf()
     private val currentDate = Calendar.getInstance(Locale.ENGLISH)
@@ -76,7 +80,6 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
     private var dates = ArrayList<Date>()
 
 
-    //wyświetlanie szczegółów taska
     override fun onClick(position: Int) {
         val myIntent= Intent(this, ShowTaskActivity::class.java)
         val item = eventList[position]
@@ -128,30 +131,41 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
     private var resultLauncher3 = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
     {
             result -> val data = result.data
-        val tmpEvent = data!!.getParcelableExtra("event", Event::class.java)!!
+        var tmpEvent = data!!.getParcelableExtra("event", Event::class.java)!!
 
-        //update taska
-        eventList[data.getIntExtra("position",0)] = tmpEvent
+        if (tmpEvent.id!=-1)
+        {
+            runBlocking {
+                val latestTask = GlobalScope.async {
+                    itemDao.insertAll(tmpEvent)
+                    itemDao.findLatestTask()
+                }.await()
 
-        GlobalScope.launch { itemDao.insertAll(tmpEvent) }
+                eventList[data.getIntExtra("position",0)] = latestTask
+                selectedDay = tmpEvent.date()!!.dayOfMonth
 
-        //cofnięcie do daty nowo utworzonego taska
+                datetosee = dateFormat2.format(dates[selectedDay-1])
 
-        //narazie daje mozliwość updatowania także daty
-        selectedDay = tmpEvent.date()!!.dayOfMonth
+                adapter2.setAnimation(false)
+                adapter2.updateAdapterData(datetosee, prevSelectedDay, shouldAnimate)
 
-        datetosee = dateFormat2.format(dates[selectedDay-1])
+                txtCurrentDate.text = "$selectedDay $month $selectedYear"
 
-        adapter2.setAnimation(false)
-        adapter2.updateAdapterData(datetosee, prevSelectedDay, shouldAnimate)
-
-        txtCurrentDate.text = "$selectedDay $month $selectedYear"
-
-        calendarView.scrollToPosition(selectedDay-1)
+                calendarView.scrollToPosition(selectedDay-1)
 
 
-        adapter.notifyDataSetChanged()
-        adapter2.notifyDataSetChanged()
+                adapter.notifyDataSetChanged()
+                adapter2.notifyDataSetChanged()
+            }
+
+
+
+        }
+
+
+
+
+
     }
 
     private var resultLauncher2 = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
@@ -181,6 +195,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
         }
 
         setContentView(R.layout.activity_main)
+        createNotificationChannel()
 
         val db = Room.databaseBuilder(
             applicationContext,
@@ -201,52 +216,24 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
         val snapHelper = LinearSnapHelper()
         snapHelper.attachToRecyclerView(calendarView)
 
-        println("eveeee")
-        println(eventList.size)
-
         setUpCalendar()
         refreshItems()
+        startNotify()
+
     }
 
     @OptIn(DelicateCoroutinesApi::class)
     private fun refreshItems(){
 
-        val e = Event(
-            dateString = LocalDate.of(2023,4,10).toString(),
-            title = "Event 111",
-            place = TaskType.FRIENDS.toString(),
-            color = TaskType.FRIENDS.color,
-            start = "00:00",
-            end = "02:20",
-            info = "jakies dodatkowe info"
-        )
-
-
         GlobalScope.launch {
-            //itemDao.deleteAll()
-            //itemDao.insertAll(e)
             eventList = itemDao.getAll() as ArrayList<Event>
             adapter.updateEventList(eventList)
             adapter2.updateEventList(eventList)
         }
-
-
-        //w bazie sa juz 22 rzeczy
-        /*
-        GlobalScope.launch {
-            val eventListDeferred = async { itemDao.getAll() as ArrayList<Event> }
-            val eventList = eventListDeferred.await()
-
-        }
-
-         */
-
-
     }
 
 
 
-    //changeMonth tylko wtedy gdy zmieniamy miesiąc na poprzedni lub następny
     private fun setUpCalendar(changeMonth: Calendar?=null) {
 
         month = months.getValue(dateFormat.format(calendar.time).split(" ")[0].toInt())
@@ -255,10 +242,8 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
 
         val monthCalendar = calendar.clone() as Calendar
 
-        //liczba dni w aktualnym miesiącu
         val lastDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
 
-        //gdy zmieniamy miesiąc to ustalamy selectedDay na pierwszy dzień w miesiącu
         if (changeMonth!=null)
         {
             selectedDay = changeMonth.getActualMinimum(Calendar.DAY_OF_MONTH)
@@ -290,13 +275,10 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
             }
 
 
-        //wymazujemy daty
         dates.clear()
 
-        //ustawiamy monthCalendar na 1 dzień w miesiącu
         monthCalendar.set(Calendar.DAY_OF_MONTH,1)
 
-        //wczytujemy wszystkie dni z miesiąca (dodajemy do listy)
         while (dates.size < lastDay) {
             dates.add(monthCalendar.time)
             monthCalendar.add(Calendar.DAY_OF_MONTH, 1)
@@ -316,7 +298,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
             eventView.layoutManager =  LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         }
 
-        adapter = CustomAdapter(dates, currentDate, eventList, itemDao)
+        adapter = CustomAdapter(dates, currentDate, eventList)
         calendarView.adapter = adapter
 
         if (currentMonth == selectedMonth) calendarView.scrollToPosition(currentDay-1)
@@ -334,11 +316,8 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
                 {
                     adapter2.setAnimation(false)
                     val pos = viewHolder.absoluteAdapterPosition
-                    adapter2.deleteItem(pos)
+                    adapter2.deleteItem(pos, viewHolder, adapter)
                     adapter.notifyDataSetChanged()
-
-
-                    //jeśli usuwany jest pierszy event to usuń margin top z kolejnego aby wyrównało się do góry
 
 
                     if (adapter2.itemCount>0 && pos == 0) {
@@ -419,20 +398,11 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
     }
     fun addTask(view: View) {
 
-        //ciężko tak
         val addIntent= Intent(this, AddTaskActivity::class.java)
 
-        //przekazujemy cały event i go nadpisujemy
         eventToAdd = Event(LocalDate.MIN.toString(), "No title", TaskType.HOBBY.toString(), TaskType.HOBBY.color, "-1", "-1", "Brak dodatkowych informacji")
         addIntent.putExtra("event",eventToAdd)
         addIntent.putExtra("eventList",eventList)
-
-
-
-        //to moglibyśmy na spokojnie wysłać
-        //addIntent.putExtra("event", eventMap[20230305]!![0])
-        //addIntent.putExtra("event", arrayListOf(eventMap))
-
         resultLauncher.launch(addIntent)
 
     }
@@ -442,31 +412,82 @@ class MainActivity : AppCompatActivity(), RecyclerViewItemInterface {
     private var resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
     {
             result -> val data = result.data
-        val tmpEvent = data!!.getParcelableExtra("event", Event::class.java)!!
-
-        GlobalScope.launch { itemDao.insertAll(tmpEvent) }
-        eventList.add(tmpEvent)
-
-        //cofnięcie do daty nowo utworzonego taska
-        selectedDay = data.getParcelableExtra("event", Event::class.java)?.date()!!.dayOfMonth
-
-        datetosee = dateFormat2.format(dates[selectedDay-1])
+        var tmpEvent = data!!.getParcelableExtra("event", Event::class.java)!!
 
 
-        adapter2.setAnimation(false)
-        adapter2.updateAdapterData(datetosee, prevSelectedDay, shouldAnimate)
+        if (tmpEvent.id!=-1) {
+            runBlocking {
+                val latestTask = GlobalScope.async {
+                    itemDao.insertAll(tmpEvent)
+                    itemDao.findLatestTask()
+                }.await()
 
-        txtCurrentDate.text = "$selectedDay $month $selectedYear"
 
-        calendarView.scrollToPosition(selectedDay-1)
+                eventList.add(latestTask)
+
+                selectedDay =
+                    data.getParcelableExtra("event", Event::class.java)?.date()!!.dayOfMonth
+
+                datetosee = dateFormat2.format(dates[selectedDay - 1])
 
 
-        adapter.notifyDataSetChanged()
-        adapter2.notifyDataSetChanged()
+                adapter2.setAnimation(false)
+                adapter2.updateAdapterData(datetosee, prevSelectedDay, shouldAnimate)
+
+                txtCurrentDate.text = "$selectedDay $month $selectedYear"
+
+                calendarView.scrollToPosition(selectedDay - 1)
+
+
+                adapter.notifyDataSetChanged()
+                adapter2.notifyDataSetChanged()
+            }
+        }
     }
 
 
 
 
+    private fun createNotificationChannel(){
+        val name="Channel"
+        val text="ChannelText"
+        val importance= NotificationManager.IMPORTANCE_HIGH
+        val channel= NotificationChannel(CHANNEL_ID,name,importance).apply {
+            description=text;
+        }
+        val notificationManager: NotificationManager =getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+    }
+
+    private fun sendNotification(info:String,id:Int) {
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.time)
+            .setContentTitle("Hej, przypominam o wydarzeniu")
+            .setContentText(info)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+        with(NotificationManagerCompat.from(this)) {
+            if (ActivityCompat.checkSelfPermission(
+                    this@MainActivity,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                return
+            }
+            notify(id, builder.build())
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun startNotify(){
+        GlobalScope.launch {
+            while (true) {
+                val items = itemDao.toNotify();
+                for (i in items) {
+                    sendNotification(i.title + " start: " + i.date() + " " + i.start, i.id);
+                }
+                delay(120000)
+            }
+        }
+    }
 
 }
